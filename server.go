@@ -12,7 +12,8 @@ var (
 )
 
 func main() {
-	router := gin.Default()
-	router.GET("/videos", videoController.FindAll)
-	router.Run(":8080")
+	server := gin.Default()
+	server.GET("/videos", videoController.FindAll)
+	server.POST("/videos", videoController.Save)
+	server.Run(":8080")
 }

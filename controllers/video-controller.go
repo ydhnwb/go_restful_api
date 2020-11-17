@@ -27,14 +27,20 @@ func NewVideoController(service services.VideoService) VideoController {
 
 func (c *controller) FindAll(ctx *gin.Context) {
 	var videos []entities.Video = c.service.All()
-	println(videos)
 	response := entities.BuildResponse(true, "OK", videos)
 	ctx.JSON(http.StatusOK, response)
 }
 
 func (c *controller) Save(ctx *gin.Context) {
-	// var video entities.Video
-	// ctx.BindJSON(&video)
-	// c.service.Insert(video)
-	println("Example save()...")
+	var video entities.Video
+	err := ctx.BindJSON(&video)
+	if err != nil {
+		response := entities.BuildErrorResponse("Failed to precess your data", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+	} else {
+		c.service.Insert(video)
+		response := entities.BuildResponse(true, "OK", video)
+		ctx.JSON(http.StatusCreated, response)
+	}
+
 }
