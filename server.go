@@ -13,7 +13,11 @@ var (
 
 func main() {
 	server := gin.Default()
-	server.GET("/videos", videoController.FindAll)
-	server.POST("/videos", videoController.Save)
+	videosRoutes := server.Group("/api/videos")
+	{
+		videosRoutes.GET("/", videoController.FindAll)
+		videosRoutes.POST("/", videoController.Save)
+	}
+
 	server.Run(":8080")
 }
