@@ -14,7 +14,7 @@ type loginService struct {
 func NewLoginService() LoginService {
 	return &loginService{
 		authorizedEmail:    "example@gmail.com",
-		authorizedPassword: "examplePassword",
+		authorizedPassword: "example",
 	}
 }
 

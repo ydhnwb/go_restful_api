@@ -7,13 +7,23 @@ import (
 )
 
 var (
-	videoService    services.VideoService       = services.NewVideoService()
+	videoService services.VideoService = services.NewVideoService()
+	loginService services.LoginService = services.NewLoginService()
+	jwtService   services.JWTService   = services.NewJWTService()
+
 	videoController controllers.VideoController = controllers.NewVideoController(videoService)
+	loginController controllers.LoginController = controllers.NewLoginController(loginService, jwtService)
 )
 
 func main() {
 	server := gin.Default()
-	videosRoutes := server.Group("/api/videos")
+
+	authRoutes := server.Group("api/auth")
+	{
+		authRoutes.POST("/login", loginController.Login)
+	}
+
+	videosRoutes := server.Group("api/videos")
 	{
 		videosRoutes.GET("/", videoController.FindAll)
 		videosRoutes.POST("/", videoController.Save)
