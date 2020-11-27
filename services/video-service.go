@@ -1,31 +1,43 @@
 package services
 
-import "github.com/ydhnwb/go_restful_api/entities"
+import (
+	"github.com/ydhnwb/go_restful_api/entities"
+	"github.com/ydhnwb/go_restful_api/repositories"
+)
 
 //VideoService is an interface that contains a contract what can the service do
 type VideoService interface {
-	Insert(entities.Video) entities.Video
+	Insert(video entities.Video) entities.Video
+	Update(video entities.Video) entities.Video
+	Delete(video entities.Video)
 	All() []entities.Video
 }
 
 type videoService struct {
-	videos []entities.Video
+	videoRepository repositories.VideoRepository
 }
 
 //NewVideoService method is instancing a VideoService
-func NewVideoService() VideoService {
+func NewVideoService(videoRep repositories.VideoRepository) VideoService {
 	return &videoService{
-		videos: []entities.Video{},
+		videoRepository: videoRep,
 	}
 }
 
 func (service *videoService) Insert(video entities.Video) entities.Video {
-	service.videos = append(service.videos, video)
+	service.videoRepository.Insert(video)
 	return video
 }
 
+func (service *videoService) Update(video entities.Video) entities.Video {
+	service.videoRepository.Update(video)
+	return video
+}
+
+func (service *videoService) Delete(video entities.Video) {
+	service.videoRepository.Delete(video)
+}
+
 func (service *videoService) All() []entities.Video {
-	// var videos []entities.Video
-	// return videos
-	return service.videos
+	return service.videoRepository.All()
 }

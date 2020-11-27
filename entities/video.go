@@ -18,6 +18,6 @@ type Video struct {
 	URL         string    `gorm:"type:text" json:"url" binding:"required,url"`
 	Author      Person    `gorm:"foreignkey:PersonID" json:"author" binding:"required"`
 	PersonID    uint64    `json:"-"`
-	CreatedAt   time.Time `json:"-" gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt   time.Time `json:"-" gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
+	CreatedAt   time.Time `gorm:"type:DATETIME;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt   time.Time `gorm:"type:DATETIME;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }

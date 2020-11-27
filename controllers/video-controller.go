@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ydhnwb/go_restful_api/entities"
@@ -10,8 +11,10 @@ import (
 
 //VideoController is an interface of logic what can Video do
 type VideoController interface {
-	FindAll(ctx *gin.Context)
-	Save(context *gin.Context)
+	All(context *gin.Context)
+	Insert(context *gin.Context)
+	Update(context *gin.Context)
+	Delete(context *gin.Context)
 }
 
 type controller struct {
@@ -25,22 +28,56 @@ func NewVideoController(service services.VideoService) VideoController {
 	}
 }
 
-func (c *controller) FindAll(ctx *gin.Context) {
+func (c *controller) All(context *gin.Context) {
 	var videos []entities.Video = c.service.All()
 	response := entities.BuildResponse(true, "OK", videos)
-	ctx.JSON(http.StatusOK, response)
+	context.JSON(http.StatusOK, response)
 }
 
-func (c *controller) Save(ctx *gin.Context) {
+func (c *controller) Insert(context *gin.Context) {
 	var video entities.Video
-	err := ctx.BindJSON(&video)
+	err := context.ShouldBindJSON(&video)
 	if err != nil {
 		response := entities.BuildErrorResponse("Failed to precess your data", err.Error(), nil)
-		ctx.JSON(http.StatusBadRequest, response)
+		context.JSON(http.StatusBadRequest, response)
 	} else {
 		c.service.Insert(video)
 		response := entities.BuildResponse(true, "OK", video)
-		ctx.JSON(http.StatusCreated, response)
+		context.JSON(http.StatusCreated, response)
 	}
 
+}
+
+func (c *controller) Update(context *gin.Context) {
+	var video entities.Video
+	err := context.ShouldBindJSON(&video)
+	if err != nil {
+		response := entities.BuildErrorResponse("Failed to precess your data", err.Error(), nil)
+		context.JSON(http.StatusBadRequest, response)
+		return
+	}
+	id, err := strconv.ParseUint(context.Param("id"), 0, 0)
+	if err != nil {
+		response := entities.BuildErrorResponse("Failed to find your id", err.Error(), nil)
+		context.JSON(http.StatusBadRequest, response)
+		return
+	}
+	video.ID = id
+	c.service.Update(video)
+	response := entities.BuildResponse(true, "OK", video)
+	context.JSON(http.StatusOK, response)
+}
+
+func (c *controller) Delete(context *gin.Context) {
+	var video entities.Video
+	id, err := strconv.ParseUint(context.Param("id"), 0, 0)
+	if err != nil {
+		response := entities.BuildErrorResponse("Failed to find your id", err.Error(), nil)
+		context.JSON(http.StatusBadRequest, response)
+		return
+	}
+	video.ID = id
+	c.service.Delete(video)
+	response := entities.BuildResponse(true, "Deleted", nil)
+	context.JSON(http.StatusOK, response)
 }
