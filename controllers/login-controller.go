@@ -47,7 +47,7 @@ func (controller *loginController) Login(context *gin.Context) {
 		response := entities.BuildResponse(true, "OK!", user)
 		context.JSON(http.StatusOK, response)
 	} else {
-		response := entities.BuildErrorResponse("Cannot authenticate! Check again your credentials", nil, nil)
+		response := entities.BuildErrorResponse("Cannot authenticate! Check again your credentials", "Error\nErro", nil)
 		context.JSON(http.StatusUnauthorized, response)
 	}
 }

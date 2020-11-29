@@ -8,17 +8,17 @@ import (
 )
 
 var (
-	videoRepository repositories.VideoRepository = repositories.NewVideoRepository()
-	videoService    services.VideoService        = services.NewVideoService(videoRepository)
-	loginService    services.LoginService        = services.NewLoginService()
-	jwtService      services.JWTService          = services.NewJWTService()
+	bookRepository repositories.BookRepository = repositories.NewBookRepository()
+	bookService    services.BookService        = services.NewBookService(bookRepository)
+	loginService   services.LoginService       = services.NewLoginService()
+	jwtService     services.JWTService         = services.NewJWTService()
 
-	videoController controllers.VideoController = controllers.NewVideoController(videoService)
+	bookController  controllers.BookController  = controllers.NewBookController(bookService)
 	loginController controllers.LoginController = controllers.NewLoginController(loginService, jwtService)
 )
 
 func main() {
-	defer videoRepository.CloseDatabaseConnection()
+	defer bookRepository.CloseDatabaseConnection()
 	server := gin.Default()
 
 	authRoutes := server.Group("api/auth")
@@ -26,12 +26,13 @@ func main() {
 		authRoutes.POST("/login", loginController.Login)
 	}
 
-	videosRoutes := server.Group("api/videos")
+	videosRoutes := server.Group("api/books")
 	{
-		videosRoutes.GET("/", videoController.All)
-		videosRoutes.POST("/", videoController.Insert)
-		videosRoutes.PUT("/:id", videoController.Update)
-		videosRoutes.DELETE("/:id", videoController.Delete)
+		videosRoutes.GET("/", bookController.All)
+		videosRoutes.GET("/:id", bookController.FindByID)
+		videosRoutes.POST("/", bookController.Insert)
+		videosRoutes.PUT("/:id", bookController.Update)
+		videosRoutes.DELETE("/:id", bookController.Delete)
 	}
 
 	server.Run(":8080")
