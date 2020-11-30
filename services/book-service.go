@@ -25,24 +25,24 @@ func NewBookService(bookRep repositories.BookRepository) BookService {
 	}
 }
 
-func (service *bookService) Insert(video entities.Book) entities.Book {
-	service.bookRepository.Insert(video)
-	return video
+func (service *bookService) Insert(book entities.Book) entities.Book {
+	service.bookRepository.InsertBook(book)
+	return book
 }
 
-func (service *bookService) Update(video entities.Book) entities.Book {
-	service.bookRepository.Update(video)
-	return video
+func (service *bookService) Update(book entities.Book) entities.Book {
+	service.bookRepository.UpdateBook(book)
+	return book
 }
 
-func (service *bookService) Delete(video entities.Book) {
-	service.bookRepository.Delete(video)
+func (service *bookService) Delete(book entities.Book) {
+	service.bookRepository.DeleteBook(book)
 }
 
 func (service *bookService) All() []entities.Book {
-	return service.bookRepository.All()
+	return service.bookRepository.AllBook()
 }
 
 func (service *bookService) FindByID(bookID uint64) entities.Book {
-	return service.bookRepository.FindByID(bookID)
+	return service.bookRepository.FindBookByID(bookID)
 }

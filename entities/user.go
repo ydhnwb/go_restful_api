@@ -1,9 +1,9 @@
 package entities
 
-//User represents user table in database
+//User is represents users table in database
 type User struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Token string `json:"token"`
+	ID       uint64 `gorm:"primary_key:auto_increment" json:"id"`
+	Fullname string `gorm:"type:varchar(255)" json:"fullname" binding:"required"`
+	Email    string `gorm:"type:varchar(255)" json:"email" binding:"required,email"`
+	Password string `gorm:"->:false;<-;not null" json:"password" binding:"required"`
 }

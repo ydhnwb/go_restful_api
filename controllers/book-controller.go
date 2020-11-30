@@ -18,24 +18,24 @@ type BookController interface {
 	Delete(context *gin.Context)
 }
 
-type controller struct {
+type bookController struct {
 	service services.BookService
 }
 
 //NewBookController function in creating a new BookController instance
 func NewBookController(service services.BookService) BookController {
-	return &controller{
+	return &bookController{
 		service: service,
 	}
 }
 
-func (c *controller) All(context *gin.Context) {
+func (c *bookController) All(context *gin.Context) {
 	var books []entities.Book = c.service.All()
 	response := entities.BuildResponse(true, "OK", books)
 	context.JSON(http.StatusOK, response)
 }
 
-func (c *controller) FindByID(context *gin.Context) {
+func (c *bookController) FindByID(context *gin.Context) {
 	id, err := strconv.ParseUint(context.Param("id"), 0, 0)
 	if err != nil {
 		response := entities.BuildErrorResponse("No parameter id were found", err.Error(), nil)
@@ -53,7 +53,7 @@ func (c *controller) FindByID(context *gin.Context) {
 
 }
 
-func (c *controller) Insert(context *gin.Context) {
+func (c *bookController) Insert(context *gin.Context) {
 	var book entities.Book
 	err := context.ShouldBindJSON(&book)
 	if err != nil {
@@ -67,7 +67,7 @@ func (c *controller) Insert(context *gin.Context) {
 
 }
 
-func (c *controller) Update(context *gin.Context) {
+func (c *bookController) Update(context *gin.Context) {
 	var book entities.Book
 	err := context.ShouldBindJSON(&book)
 	if err != nil {
@@ -87,7 +87,7 @@ func (c *controller) Update(context *gin.Context) {
 	context.JSON(http.StatusOK, response)
 }
 
-func (c *controller) Delete(context *gin.Context) {
+func (c *bookController) Delete(context *gin.Context) {
 	var book entities.Book
 	id, err := strconv.ParseUint(context.Param("id"), 0, 0)
 	if err != nil {

@@ -2,13 +2,17 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/ydhnwb/go_restful_api/config"
 	"github.com/ydhnwb/go_restful_api/controllers"
 	"github.com/ydhnwb/go_restful_api/repositories"
 	"github.com/ydhnwb/go_restful_api/services"
+	"gorm.io/gorm"
 )
 
 var (
-	bookRepository repositories.BookRepository = repositories.NewBookRepository()
+	db             *gorm.DB                    = config.SetupDatabaseConnection()
+	bookRepository repositories.BookRepository = repositories.NewBookRepository(db)
+	userRepository repositories.UserRepository = repositories.NewUserRepository(db)
 	bookService    services.BookService        = services.NewBookService(bookRepository)
 	loginService   services.LoginService       = services.NewLoginService()
 	jwtService     services.JWTService         = services.NewJWTService()
@@ -18,7 +22,7 @@ var (
 )
 
 func main() {
-	defer bookRepository.CloseDatabaseConnection()
+	defer config.CloseDatabaseConnection(db)
 	server := gin.Default()
 
 	authRoutes := server.Group("api/auth")
