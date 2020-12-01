@@ -14,7 +14,7 @@ var (
 	bookRepository repositories.BookRepository = repositories.NewBookRepository(db)
 	userRepository repositories.UserRepository = repositories.NewUserRepository(db)
 	bookService    services.BookService        = services.NewBookService(bookRepository)
-	loginService   services.LoginService       = services.NewLoginService()
+	loginService   services.LoginService       = services.NewLoginService(userRepository)
 	jwtService     services.JWTService         = services.NewJWTService()
 
 	bookController  controllers.BookController  = controllers.NewBookController(bookService)
@@ -28,15 +28,16 @@ func main() {
 	authRoutes := server.Group("api/auth")
 	{
 		authRoutes.POST("/login", loginController.Login)
+		authRoutes.POST("/register", loginController.Register)
 	}
 
-	videosRoutes := server.Group("api/books")
+	bookRoutes := server.Group("api/books")
 	{
-		videosRoutes.GET("/", bookController.All)
-		videosRoutes.GET("/:id", bookController.FindByID)
-		videosRoutes.POST("/", bookController.Insert)
-		videosRoutes.PUT("/:id", bookController.Update)
-		videosRoutes.DELETE("/:id", bookController.Delete)
+		bookRoutes.GET("/", bookController.All)
+		bookRoutes.GET("/:id", bookController.FindByID)
+		bookRoutes.POST("/", bookController.Insert)
+		bookRoutes.PUT("/:id", bookController.Update)
+		bookRoutes.DELETE("/:id", bookController.Delete)
 	}
 
 	server.Run(":8080")
