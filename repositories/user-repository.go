@@ -67,7 +67,7 @@ func (db *userConnection) VerifyCredential(email string, password string) bool {
 }
 
 func (db *userConnection) IsDuplicateEmail(user entities.User) bool {
-	err := db.connection.Where("email = ?", user.Email).Error
+	err := db.connection.Where("email = ?", user.Email).Take(&user).Error
 	if err == nil {
 		return false
 	}

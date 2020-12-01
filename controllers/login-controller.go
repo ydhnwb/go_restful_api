@@ -41,13 +41,9 @@ func (controller *loginController) Login(context *gin.Context) {
 	if isAuthenticated {
 		user := controller.loginService.FindByEmail(credentials.Email)
 		generatedToken := controller.jwtService.GenerateToken(strconv.FormatUint(user.ID, 10), false)
-		userResponse := entities.UserResponse{
-			ID:       user.ID,
-			Email:    user.Email,
-			Fullname: user.Fullname,
-			Token:    generatedToken,
-		}
-		response := entities.BuildResponse(true, "OK!", userResponse)
+		user.Token = generatedToken
+		user.Password = ""
+		response := entities.BuildResponse(true, "OK!", user)
 		context.JSON(http.StatusOK, response)
 	} else {
 		response := entities.BuildErrorResponse("Cannot authenticate! Check again your credentials", "Invalid credentials", nil)
@@ -68,13 +64,10 @@ func (controller *loginController) Register(context *gin.Context) {
 			context.JSON(http.StatusConflict, response)
 		} else {
 			createdUser := controller.loginService.CreateUser(user)
-			userResponse := entities.UserResponse{
-				ID:       createdUser.ID,
-				Fullname: createdUser.Fullname,
-				Email:    createdUser.Email,
-				Token:    createdUser.Token,
-			}
-			response := entities.BuildResponse(true, "OK!", userResponse)
+			token := controller.jwtService.GenerateToken(strconv.FormatUint(user.ID, 10), false)
+			createdUser.Password = ""
+			createdUser.Token = token
+			response := entities.BuildResponse(true, "OK!", createdUser)
 			context.JSON(http.StatusCreated, response)
 		}
 	}
