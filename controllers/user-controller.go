@@ -46,7 +46,7 @@ func (c *userController) Insert(context *gin.Context) {
 
 func (c *userController) Update(context *gin.Context) {
 	var user entities.User
-	err := context.ShouldBindJSON(&user)
+	err := context.ShouldBind(&user)
 	if err != nil {
 		response := entities.BuildErrorResponse("Failed to process your data", err.Error(), nil)
 		context.JSON(http.StatusBadRequest, response)

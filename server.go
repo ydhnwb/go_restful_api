@@ -37,6 +37,7 @@ func main() {
 	userRoutes := server.Group("api/user", middlewares.AuthorizeJWT(jwtService))
 	{
 		userRoutes.GET("/profile", userController.Profile)
+		userRoutes.PUT("/profile", userController.Update)
 	}
 
 	bookRoutes := server.Group("api/books", middlewares.AuthorizeJWT(jwtService))
