@@ -6,15 +6,20 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/ydhnwb/go_restful_api/entities"
 	"github.com/ydhnwb/go_restful_api/services"
 )
 
 //AuthorizeJWT validates the token user given, return 401 if not valid
-func AuthorizeJWT() gin.HandlerFunc {
+func AuthorizeJWT(jwtService services.JWTService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		tokenGiven := authHeader[len("Bearer "):]
-		token, err := services.NewJWTService().ValidateToken(tokenGiven)
+		if authHeader == "" {
+			response := entities.BuildErrorResponse("Failed to process your request", "Cannot get token from Authorization herader", nil)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
+			return
+		}
+		token, err := jwtService.ValidateToken(authHeader)
 		if token.Valid {
 			claims := token.Claims.(jwt.MapClaims)
 			log.Println("Claims[Name]: ", claims["name"])
@@ -22,10 +27,8 @@ func AuthorizeJWT() gin.HandlerFunc {
 			log.Println("Claims[ExpiredAt]: ", claims["exp"])
 		} else {
 			log.Println(err)
-			c.AbortWithStatus(http.StatusUnauthorized)
-
+			response := entities.BuildErrorResponse("Failed to validate your token ", err.Error(), nil)
+			c.AbortWithStatusJSON(http.StatusBadRequest, response)
 		}
-
 	}
-
 }

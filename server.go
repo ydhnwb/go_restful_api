@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ydhnwb/go_restful_api/config"
 	"github.com/ydhnwb/go_restful_api/controllers"
+	"github.com/ydhnwb/go_restful_api/middlewares"
 	"github.com/ydhnwb/go_restful_api/repositories"
 	"github.com/ydhnwb/go_restful_api/services"
 	"gorm.io/gorm"
@@ -31,7 +32,7 @@ func main() {
 		authRoutes.POST("/register", loginController.Register)
 	}
 
-	bookRoutes := server.Group("api/books")
+	bookRoutes := server.Group("api/books", middlewares.AuthorizeJWT(jwtService))
 	{
 		bookRoutes.GET("/", bookController.All)
 		bookRoutes.GET("/:id", bookController.FindByID)
