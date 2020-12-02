@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/ydhnwb/go_restful_api/entities"
 	"github.com/ydhnwb/go_restful_api/services"
@@ -17,12 +19,14 @@ type UserController interface {
 
 type userController struct {
 	userService services.UserService
+	jwtService  services.JWTService
 }
 
 //NewUserController is a
-func NewUserController(service services.UserService) UserController {
+func NewUserController(service services.UserService, jwtService services.JWTService) UserController {
 	return &userController{
 		userService: service,
+		jwtService:  jwtService,
 	}
 }
 
@@ -53,5 +57,14 @@ func (c *userController) Update(context *gin.Context) {
 }
 
 func (c *userController) Profile(context *gin.Context) {
-	println("Get user profile")
+	authHeader := context.GetHeader("Authorization")
+	token, err := c.jwtService.ValidateToken(authHeader)
+	if err != nil {
+		panic(err.Error())
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	user := c.userService.Profile(fmt.Sprintf("%v", claims["name"]))
+	user.Password = ""
+	response := entities.BuildResponse(true, "OK", user)
+	context.JSON(http.StatusOK, response)
 }

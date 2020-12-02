@@ -10,7 +10,7 @@ type UserService interface {
 	Insert(user entities.User) entities.User
 	Update(user entities.User) entities.User
 	Delete(user entities.User)
-	Profile(token string) entities.User
+	Profile(userId string) entities.User
 }
 
 type userService struct {
@@ -38,7 +38,6 @@ func (service *userService) Delete(user entities.User) {
 	service.userRepository.DeleteUser(user)
 }
 
-func (service *userService) Profile(token string) entities.User {
-	// todo: ectract token and find
-	return entities.User{}
+func (service *userService) Profile(userID string) entities.User {
+	return service.userRepository.ProfileUser(userID)
 }

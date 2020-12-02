@@ -17,9 +17,11 @@ var (
 	bookService    services.BookService        = services.NewBookService(bookRepository)
 	loginService   services.LoginService       = services.NewLoginService(userRepository)
 	jwtService     services.JWTService         = services.NewJWTService()
+	userService    services.UserService        = services.NewUserService(userRepository)
 
 	bookController  controllers.BookController  = controllers.NewBookController(bookService)
 	loginController controllers.LoginController = controllers.NewLoginController(loginService, jwtService)
+	userController  controllers.UserController  = controllers.NewUserController(userService, jwtService)
 )
 
 func main() {
@@ -30,6 +32,11 @@ func main() {
 	{
 		authRoutes.POST("/login", loginController.Login)
 		authRoutes.POST("/register", loginController.Register)
+	}
+
+	userRoutes := server.Group("api/user", middlewares.AuthorizeJWT(jwtService))
+	{
+		userRoutes.GET("/profile", userController.Profile)
 	}
 
 	bookRoutes := server.Group("api/books", middlewares.AuthorizeJWT(jwtService))

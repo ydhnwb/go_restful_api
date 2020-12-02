@@ -16,7 +16,7 @@ type UserRepository interface {
 	VerifyCredential(email string, password string) bool
 	IsDuplicateEmail(user entities.User) bool
 	FindByEmail(email string) entities.User
-	ProfileUser(token string) entities.User
+	ProfileUser(userID string) entities.User
 }
 
 type userConnection struct {
@@ -47,9 +47,9 @@ func (db *userConnection) DeleteUser(user entities.User) {
 	db.connection.Delete(&user)
 
 }
-func (db *userConnection) ProfileUser(token string) entities.User {
+func (db *userConnection) ProfileUser(userID string) entities.User {
 	var user entities.User
-	db.connection.Find(&user, token)
+	db.connection.Find(&user, userID)
 	return user
 }
 
