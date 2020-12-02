@@ -41,7 +41,7 @@ example response (error):
 ```
 
 ### /api/auth/register
-body: email, password  
+body: email, password, fullname  
 method: POST  
 example request:  
 ```
