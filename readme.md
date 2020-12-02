@@ -40,7 +40,7 @@ example response (error):
 }
 ```
 
-### /api/auth/
+### /api/auth/register
 body: email, password  
 method: POST  
 example request:  
