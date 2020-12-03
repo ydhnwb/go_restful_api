@@ -40,6 +40,8 @@ func (db *userConnection) InsertUser(user entities.User) entities.User {
 
 func (db *userConnection) UpdateUser(user entities.User) {
 	user.Password = hashAndSalt([]byte(user.Password))
+	println("hashed when update")
+	println(user.Password)
 	db.connection.Save(&user)
 }
 
