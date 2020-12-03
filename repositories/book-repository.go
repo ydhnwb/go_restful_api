@@ -40,7 +40,8 @@ func (db *bookConnection) DeleteBook(book entities.Book) {
 func (db *bookConnection) AllBook() []entities.Book {
 	var books []entities.Book
 	println(books)
-	db.connection.Set("gorm:auto_preload", true).Find(&books)
+	db.connection.Preload("Users").Find(&books)
+	// db.connection.Set("gorm:auto_preload", true).Find(&books)
 	return books
 }
 

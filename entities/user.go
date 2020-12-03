@@ -16,3 +16,10 @@ type UserResponse struct {
 	Email    string `json:"email"`
 	Token    string `json:"token,omitempty"`
 }
+
+//UserCreate is a serializer to used when creating/register a new User
+type UserCreate struct {
+	Fullname string `json:"fullname" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password,omitempty" binding:"required"`
+}

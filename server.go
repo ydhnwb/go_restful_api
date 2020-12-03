@@ -19,7 +19,7 @@ var (
 	jwtService     services.JWTService         = services.NewJWTService()
 	userService    services.UserService        = services.NewUserService(userRepository)
 
-	bookController  controllers.BookController  = controllers.NewBookController(bookService)
+	bookController  controllers.BookController  = controllers.NewBookController(bookService, jwtService)
 	loginController controllers.LoginController = controllers.NewLoginController(loginService, jwtService)
 	userController  controllers.UserController  = controllers.NewUserController(userService, jwtService)
 )
