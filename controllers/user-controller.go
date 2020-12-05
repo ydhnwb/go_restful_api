@@ -33,15 +33,20 @@ func NewUserController(service services.UserService, jwtService services.JWTServ
 }
 
 func (c *userController) Insert(context *gin.Context) {
-	var user entities.User
+	var user dto.UserCreateDTO
 	err := context.ShouldBindJSON(&user)
 	if err != nil {
 		response := entities.BuildErrorResponse("Failed to process your data", err.Error(), nil)
 		context.JSON(http.StatusBadRequest, response)
 	} else {
-		//also handle hash password here
-		c.userService.Insert(user)
-		response := entities.BuildResponse(true, "OK", user)
+		u := c.userService.Insert(user)
+		userToReturn := dto.UserReadDTO{
+			ID:       u.ID,
+			Email:    u.Email,
+			Fullname: u.Fullname,
+			Token:    "",
+		}
+		response := entities.BuildResponse(true, "OK", userToReturn)
 		context.JSON(http.StatusCreated, response)
 	}
 }
@@ -60,24 +65,12 @@ func (c *userController) Update(context *gin.Context) {
 		panic(err.Error())
 	}
 	claims := token.Claims.(jwt.MapClaims)
-	if claims["name"] != strconv.FormatUint(user.ID, 10) {
-		response := entities.BuildErrorResponse("Your id or token didn't match", "Token or ID didnt match", nil)
-		context.JSON(http.StatusBadRequest, response)
-	} else {
-		var userToUpdate entities.User = entities.User{
-			Email:    user.Email,
-			Fullname: user.Fullname,
-			ID:       user.ID,
-		}
-		if user.Password != "" {
-			userToUpdate.Password = user.Password
-		}
-		c.userService.Update(userToUpdate)
-		userToUpdate.Password = ""
-		response := entities.BuildResponse(true, "OK", userToUpdate)
-		context.JSON(http.StatusOK, response)
-	}
-
+	id, err := strconv.ParseUint(fmt.Sprintf("%v", claims["name"]), 10, 64)
+	user.ID = id
+	c.userService.Update(user)
+	user.Password = ""
+	response := entities.BuildResponse(true, "OK", user)
+	context.JSON(http.StatusOK, response)
 }
 
 func (c *userController) Profile(context *gin.Context) {

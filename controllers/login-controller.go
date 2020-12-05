@@ -41,9 +41,8 @@ func (controller *loginController) Login(context *gin.Context) {
 	if isAuthenticated {
 		user := controller.loginService.FindByEmail(credentials.Email)
 		generatedToken := controller.jwtService.GenerateToken(strconv.FormatUint(user.ID, 10), false)
-		user.Token = generatedToken
-		user.Password = ""
-		response := entities.BuildResponse(true, "OK!", user)
+		userToReturn := dto.UserReadDTO{ID: user.ID, Email: user.Email, Fullname: user.Fullname, Token: generatedToken}
+		response := entities.BuildResponse(true, "OK!", userToReturn)
 		context.JSON(http.StatusOK, response)
 	} else {
 		response := entities.BuildErrorResponse("Cannot authenticate! Check again your credentials", "Invalid credentials", nil)
@@ -53,21 +52,20 @@ func (controller *loginController) Login(context *gin.Context) {
 
 //Register is creates a new user
 func (controller *loginController) Register(context *gin.Context) {
-	var user entities.User
+	var user dto.UserCreateDTO
 	err := context.ShouldBind(&user)
 	if err != nil {
 		response := entities.BuildErrorResponse("Failed to process your data", err.Error(), nil)
 		context.JSON(http.StatusBadRequest, response)
 	} else {
-		if !controller.loginService.IsDuplicateEmail(user) {
+		if !controller.loginService.IsDuplicateEmail(user.Email) {
 			response := entities.BuildErrorResponse("Failed to process your data", "Duplicate email", nil)
 			context.JSON(http.StatusConflict, response)
 		} else {
 			createdUser := controller.loginService.CreateUser(user)
-			token := controller.jwtService.GenerateToken(strconv.FormatUint(user.ID, 10), false)
-			createdUser.Password = ""
-			createdUser.Token = token
-			response := entities.BuildResponse(true, "OK!", createdUser)
+			token := controller.jwtService.GenerateToken(strconv.FormatUint(createdUser.ID, 10), false)
+			userToReturn := dto.UserReadDTO{ID: createdUser.ID, Email: createdUser.Email, Fullname: createdUser.Fullname, Token: token}
+			response := entities.BuildResponse(true, "OK!", userToReturn)
 			context.JSON(http.StatusCreated, response)
 		}
 	}
