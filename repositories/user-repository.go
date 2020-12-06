@@ -1,17 +1,19 @@
 package repositories
 
 import (
-	"github.com/ydhnwb/go_restful_api/dto"
+	"log"
+
 	"github.com/ydhnwb/go_restful_api/entities"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 //UserRepository is
 type UserRepository interface {
-	InsertUser(user dto.UserCreateDTO) entities.User
-	UpdateUser(user dto.UserUpdateDTO)
+	InsertUser(user entities.User) entities.User
+	UpdateUser(user entities.User) entities.User
 	DeleteUser(user entities.User)
-	VerifyCredential(email string, password string) (tx *gorm.DB)
+	VerifyCredential(email string, password string) interface{}
 	IsDuplicateEmail(email string) (tx *gorm.DB)
 	FindByEmail(email string) entities.User
 	ProfileUser(userID string) entities.User
@@ -28,15 +30,18 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	}
 }
 
-func (db *userConnection) InsertUser(user dto.UserCreateDTO) entities.User {
+func (db *userConnection) InsertUser(user entities.User) entities.User {
+	user.Password = hashAndSalt([]byte(user.Password))
 	db.connection.Save(&user)
-	var createdUser entities.User
-	db.connection.Where("email = ?", user.Email).Take(&createdUser)
-	return createdUser
+	// db.connection.Where("email = ?", user.Email).Take(&user)
+	return user
 }
 
-func (db *userConnection) UpdateUser(user dto.UserUpdateDTO) {
+func (db *userConnection) UpdateUser(user entities.User) entities.User {
 	db.connection.Save(&user)
+	var updatedUser entities.User
+	db.connection.Find(updatedUser, user.ID)
+	return updatedUser
 }
 
 func (db *userConnection) DeleteUser(user entities.User) {
@@ -49,9 +54,13 @@ func (db *userConnection) ProfileUser(userID string) entities.User {
 	return user
 }
 
-func (db *userConnection) VerifyCredential(email string, password string) (tx *gorm.DB) {
+func (db *userConnection) VerifyCredential(email string, password string) interface{} {
 	var user entities.User
-	return db.connection.Where("email = ?").Take(&user)
+	res := db.connection.Where("email = ?", email).Take(&user)
+	if res.Error == nil {
+		return user
+	}
+	return nil
 }
 
 func (db *userConnection) IsDuplicateEmail(email string) (tx *gorm.DB) {
@@ -63,4 +72,12 @@ func (db *userConnection) FindByEmail(email string) entities.User {
 	var user entities.User
 	db.connection.Where("email = ?", email).Take(&user)
 	return user
+}
+
+func hashAndSalt(pwd []byte) string {
+	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+	if err != nil {
+		log.Println(err)
+	}
+	return string(hash)
 }

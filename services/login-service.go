@@ -3,6 +3,7 @@ package services
 import (
 	"log"
 
+	"github.com/mashingan/smapping"
 	"github.com/ydhnwb/go_restful_api/dto"
 	"github.com/ydhnwb/go_restful_api/entities"
 	"github.com/ydhnwb/go_restful_api/repositories"
@@ -11,7 +12,7 @@ import (
 
 // LoginService is an interface about something that this service can do
 type LoginService interface {
-	VerifyCredential(email string, password string) bool
+	VerifyCredential(email string, password string) interface{}
 	CreateUser(user dto.UserCreateDTO) entities.User
 	FindByEmail(email string) entities.User
 	IsDuplicateEmail(email string) bool
@@ -28,17 +29,25 @@ func NewLoginService(userRepo repositories.UserRepository) LoginService {
 	}
 }
 
-func (service *loginService) VerifyCredential(email string, password string) bool {
+func (service *loginService) VerifyCredential(email string, password string) interface{} {
 	res := service.userRepository.VerifyCredential(email, password)
-	if res.Error == nil {
-		comparedPassword := comparePasswords(password, []byte(password))
-		return email == email && comparedPassword
+	if v, ok := res.(entities.User); ok {
+		comparedPassword := comparePasswords(v.Password, []byte(password))
+		if v.Email == email && comparedPassword {
+			return res
+		}
+		return false
 	}
 	return false
 }
 
 func (service *loginService) CreateUser(user dto.UserCreateDTO) entities.User {
-	res := service.userRepository.InsertUser(user)
+	userToCreate := entities.User{}
+	err := smapping.FillStruct(&userToCreate, smapping.MapFields(&user))
+	if err != nil {
+		log.Fatalf("failed map: %v", err)
+	}
+	res := service.userRepository.InsertUser(userToCreate)
 	return res
 }
 
@@ -49,14 +58,6 @@ func (service *loginService) IsDuplicateEmail(email string) bool {
 
 func (service *loginService) FindByEmail(email string) entities.User {
 	return service.userRepository.FindByEmail(email)
-}
-
-func hashAndSalt(pwd []byte) string {
-	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
-	if err != nil {
-		log.Println(err)
-	}
-	return string(hash)
 }
 
 func comparePasswords(hashedPwd string, plainPwd []byte) bool {

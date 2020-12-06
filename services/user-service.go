@@ -1,6 +1,9 @@
 package services
 
 import (
+	"log"
+
+	"github.com/mashingan/smapping"
 	"github.com/ydhnwb/go_restful_api/dto"
 	"github.com/ydhnwb/go_restful_api/entities"
 	"github.com/ydhnwb/go_restful_api/repositories"
@@ -9,7 +12,7 @@ import (
 //UserService is a contract interface
 type UserService interface {
 	Insert(user dto.UserCreateDTO) entities.User
-	Update(user dto.UserUpdateDTO) dto.UserUpdateDTO
+	Update(user dto.UserUpdateDTO) entities.User
 	Delete(user entities.User)
 	Profile(userID string) entities.User
 }
@@ -26,13 +29,23 @@ func NewUserService(userRepo repositories.UserRepository) UserService {
 }
 
 func (service *userService) Insert(user dto.UserCreateDTO) entities.User {
-	createdUser := service.userRepository.InsertUser(user)
+	userToCreate := entities.User{}
+	err := smapping.FillStruct(&userToCreate, smapping.MapFields(&user))
+	if err != nil {
+		log.Fatalf("failed map: %v", err)
+	}
+	createdUser := service.userRepository.InsertUser(userToCreate)
 	return createdUser
 }
 
-func (service *userService) Update(user dto.UserUpdateDTO) dto.UserUpdateDTO {
-	service.userRepository.UpdateUser(user)
-	return user
+func (service *userService) Update(user dto.UserUpdateDTO) entities.User {
+	userToUpdate := entities.User{}
+	err := smapping.FillStruct(&userToUpdate, smapping.MapFields(&user))
+	if err != nil {
+		log.Fatalf("failed map: %v", err)
+	}
+	updatedUser := service.userRepository.UpdateUser(userToUpdate)
+	return updatedUser
 }
 
 func (service *userService) Delete(user entities.User) {

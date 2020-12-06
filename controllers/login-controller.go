@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mashingan/smapping"
 	"github.com/ydhnwb/go_restful_api/dto"
 	"github.com/ydhnwb/go_restful_api/entities"
 	"github.com/ydhnwb/go_restful_api/services"
@@ -37,17 +39,18 @@ func (controller *loginController) Login(context *gin.Context) {
 		context.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
-	isAuthenticated := controller.loginService.VerifyCredential(credentials.Email, credentials.Password)
-	if isAuthenticated {
-		user := controller.loginService.FindByEmail(credentials.Email)
-		generatedToken := controller.jwtService.GenerateToken(strconv.FormatUint(user.ID, 10), false)
-		userToReturn := dto.UserReadDTO{ID: user.ID, Email: user.Email, Fullname: user.Fullname, Token: generatedToken}
+	authResult := controller.loginService.VerifyCredential(credentials.Email, credentials.Password)
+	if v, ok := authResult.(entities.User); ok {
+		generatedToken := controller.jwtService.GenerateToken(strconv.FormatUint(v.ID, 10), false)
+		userToReturn := dto.UserReadDTO{}
+		err = smapping.FillStruct(&userToReturn, smapping.MapFields(&v))
+		userToReturn.Token = generatedToken
 		response := entities.BuildResponse(true, "OK!", userToReturn)
 		context.JSON(http.StatusOK, response)
-	} else {
-		response := entities.BuildErrorResponse("Cannot authenticate! Check again your credentials", "Invalid credentials", nil)
-		context.JSON(http.StatusUnauthorized, response)
+		return
 	}
+	response := entities.BuildErrorResponse("Cannot authenticate! Check again your credentials", "Invalid credentials", nil)
+	context.JSON(http.StatusUnauthorized, response)
 }
 
 //Register is creates a new user
@@ -64,7 +67,12 @@ func (controller *loginController) Register(context *gin.Context) {
 		} else {
 			createdUser := controller.loginService.CreateUser(user)
 			token := controller.jwtService.GenerateToken(strconv.FormatUint(createdUser.ID, 10), false)
-			userToReturn := dto.UserReadDTO{ID: createdUser.ID, Email: createdUser.Email, Fullname: createdUser.Fullname, Token: token}
+			userToReturn := dto.UserReadDTO{}
+			err = smapping.FillStruct(&userToReturn, smapping.MapFields(&createdUser))
+			userToReturn.Token = token
+			if err != nil {
+				log.Fatalf("failed map: %v", err)
+			}
 			response := entities.BuildResponse(true, "OK!", userToReturn)
 			context.JSON(http.StatusCreated, response)
 		}
