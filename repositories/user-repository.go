@@ -33,15 +33,13 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 func (db *userConnection) InsertUser(user entities.User) entities.User {
 	user.Password = hashAndSalt([]byte(user.Password))
 	db.connection.Save(&user)
-	// db.connection.Where("email = ?", user.Email).Take(&user)
 	return user
 }
 
 func (db *userConnection) UpdateUser(user entities.User) entities.User {
+	user.Password = hashAndSalt([]byte(user.Password))
 	db.connection.Save(&user)
-	var updatedUser entities.User
-	db.connection.Find(updatedUser, user.ID)
-	return updatedUser
+	return user
 }
 
 func (db *userConnection) DeleteUser(user entities.User) {

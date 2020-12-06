@@ -11,7 +11,6 @@ import (
 
 //UserService is a contract interface
 type UserService interface {
-	Insert(user dto.UserCreateDTO) entities.User
 	Update(user dto.UserUpdateDTO) entities.User
 	Delete(user entities.User)
 	Profile(userID string) entities.User
@@ -26,16 +25,6 @@ func NewUserService(userRepo repositories.UserRepository) UserService {
 	return &userService{
 		userRepository: userRepo,
 	}
-}
-
-func (service *userService) Insert(user dto.UserCreateDTO) entities.User {
-	userToCreate := entities.User{}
-	err := smapping.FillStruct(&userToCreate, smapping.MapFields(&user))
-	if err != nil {
-		log.Fatalf("failed map: %v", err)
-	}
-	createdUser := service.userRepository.InsertUser(userToCreate)
-	return createdUser
 }
 
 func (service *userService) Update(user dto.UserUpdateDTO) entities.User {

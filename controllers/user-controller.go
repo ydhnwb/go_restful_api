@@ -16,7 +16,6 @@ import (
 
 //UserController ...
 type UserController interface {
-	Insert(context *gin.Context)
 	Update(context *gin.Context)
 	Profile(context *gin.Context)
 }
@@ -34,24 +33,6 @@ func NewUserController(service services.UserService, jwtService services.JWTServ
 	}
 }
 
-func (c *userController) Insert(context *gin.Context) {
-	var user dto.UserCreateDTO
-	err := context.ShouldBindJSON(&user)
-	if err != nil {
-		response := entities.BuildErrorResponse("Failed to process your data", err.Error(), nil)
-		context.JSON(http.StatusBadRequest, response)
-	} else {
-		u := c.userService.Insert(user)
-		userToReturn := dto.UserReadDTO{}
-		errMap := smapping.FillStruct(&userToReturn, smapping.MapFields(&u))
-		if errMap != nil {
-			log.Fatalf("failed map: %v", err)
-		}
-		response := entities.BuildResponse(true, "OK", userToReturn)
-		context.JSON(http.StatusCreated, response)
-	}
-}
-
 func (c *userController) Update(context *gin.Context) {
 	var user dto.UserUpdateDTO
 	err := context.ShouldBind(&user)
@@ -61,8 +42,8 @@ func (c *userController) Update(context *gin.Context) {
 		return
 	}
 	authHeader := context.GetHeader("Authorization")
-	token, err := c.jwtService.ValidateToken(authHeader)
-	if err != nil {
+	token, errToken := c.jwtService.ValidateToken(authHeader)
+	if errToken != nil {
 		panic(err.Error())
 	}
 	claims := token.Claims.(jwt.MapClaims)
