@@ -1,12 +1,10 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mashingan/smapping"
 	"github.com/ydhnwb/go_restful_api/dto"
 	"github.com/ydhnwb/go_restful_api/entities"
 	"github.com/ydhnwb/go_restful_api/services"
@@ -43,9 +41,6 @@ func (controller *loginController) Login(context *gin.Context) {
 	if v, ok := authResult.(entities.User); ok {
 		generatedToken := controller.jwtService.GenerateToken(strconv.FormatUint(v.ID, 10), false)
 		v.Token = generatedToken
-		// userToReturn := dto.UserReadDTO{}
-		// err = smapping.FillStruct(&userToReturn, smapping.MapFields(&v))
-		// userToReturn.Token = generatedToken
 		response := entities.BuildResponse(true, "OK!", v)
 		context.JSON(http.StatusOK, response)
 		return
@@ -68,13 +63,8 @@ func (controller *loginController) Register(context *gin.Context) {
 		} else {
 			createdUser := controller.loginService.CreateUser(user)
 			token := controller.jwtService.GenerateToken(strconv.FormatUint(createdUser.ID, 10), false)
-			userToReturn := dto.UserReadDTO{}
-			err = smapping.FillStruct(&userToReturn, smapping.MapFields(&createdUser))
-			userToReturn.Token = token
-			if err != nil {
-				log.Fatalf("failed map: %v", err)
-			}
-			response := entities.BuildResponse(true, "OK!", userToReturn)
+			createdUser.Token = token
+			response := entities.BuildResponse(true, "OK!", createdUser)
 			context.JSON(http.StatusCreated, response)
 		}
 	}

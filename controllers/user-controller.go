@@ -2,19 +2,17 @@ package controllers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/mashingan/smapping"
 	"github.com/ydhnwb/go_restful_api/dto"
 	"github.com/ydhnwb/go_restful_api/entities"
 	"github.com/ydhnwb/go_restful_api/services"
 )
 
-//UserController ...
+//UserController is a contract
 type UserController interface {
 	Update(context *gin.Context)
 	Profile(context *gin.Context)
@@ -49,13 +47,8 @@ func (c *userController) Update(context *gin.Context) {
 	claims := token.Claims.(jwt.MapClaims)
 	id, err := strconv.ParseUint(fmt.Sprintf("%v", claims["name"]), 10, 64)
 	user.ID = id
-	u := c.userService.Update(user)
-	userToReturn := dto.UserReadDTO{}
-	errMap := smapping.FillStruct(&userToReturn, smapping.MapFields(&u))
-	if errMap != nil {
-		log.Fatalf("failed map: %v", err)
-	}
-	response := entities.BuildResponse(true, "OK", userToReturn)
+	c.userService.Update(user)
+	response := entities.BuildResponse(true, "OK", user)
 	context.JSON(http.StatusOK, response)
 }
 
@@ -67,11 +60,6 @@ func (c *userController) Profile(context *gin.Context) {
 	}
 	claims := token.Claims.(jwt.MapClaims)
 	user := c.userService.Profile(fmt.Sprintf("%v", claims["name"]))
-	userToReturn := dto.UserReadDTO{}
-	errMap := smapping.FillStruct(&userToReturn, smapping.MapFields(&user))
-	if errMap != nil {
-		log.Fatalf("failed map: %v", err)
-	}
-	response := entities.BuildResponse(true, "OK", userToReturn)
+	response := entities.BuildResponse(true, "OK", user)
 	context.JSON(http.StatusOK, response)
 }
