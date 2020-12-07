@@ -7,6 +7,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/mashingan/smapping"
+	"github.com/ydhnwb/go_restful_api/dto"
 	"github.com/ydhnwb/go_restful_api/entities"
 	"github.com/ydhnwb/go_restful_api/services"
 )
@@ -36,6 +38,7 @@ func NewBookController(service services.BookService, jwtService services.JWTServ
 
 func (c *bookController) All(context *gin.Context) {
 	var books []entities.Book = c.service.All()
+	// booksDTO := convertBookEntitiesToDTO(books)
 	response := entities.BuildResponse(true, "OK", books)
 	context.JSON(http.StatusOK, response)
 }
@@ -58,25 +61,26 @@ func (c *bookController) FindByID(context *gin.Context) {
 }
 
 func (c *bookController) Insert(context *gin.Context) {
-	var book entities.Book
-	err := context.ShouldBind(&book)
-	authHeader := context.GetHeader("Authorization")
-	userID := c.getUserIDByGivenToken(authHeader)
-	if userID == "" {
-		response := entities.BuildErrorResponse("Failed token", "Looks like you passed invalid token", nil)
-		context.JSON(http.StatusBadRequest, response)
-		return
-	}
-	parsedInt, _err := strconv.ParseUint(userID, 10, 64)
-	if _err == nil {
-		book.UserID = parsedInt
-	}
+	var bookCreateDTO dto.BookCreateDTO
+	err := context.ShouldBind(&bookCreateDTO)
 	if err != nil {
 		response := entities.BuildErrorResponse("Failed to process your data", err.Error(), nil)
 		context.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	authHeader := context.GetHeader("Authorization")
+	userID := c.getUserIDByGivenToken(authHeader)
+	userIDConverted, _err := strconv.ParseUint(userID, 10, 64)
+	if _err == nil {
+		bookCreateDTO.UserID = userIDConverted
+	}
+	if err != nil {
+		response := entities.BuildErrorResponse("Failed to process your data.", err.Error(), nil)
+		context.JSON(http.StatusBadRequest, response)
 	} else {
-		c.service.Insert(book)
-		response := entities.BuildResponse(true, "OK", book)
+		res := c.service.Insert(bookCreateDTO)
+		response := entities.BuildResponse(true, "OK", res)
 		context.JSON(http.StatusCreated, response)
 	}
 
@@ -119,10 +123,23 @@ func (c *bookController) Delete(context *gin.Context) {
 func (c *bookController) getUserIDByGivenToken(token string) string {
 	aToken, err := c.jwtService.ValidateToken(token)
 	if err != nil {
-		// panic(err.Error())
-		println(err.Error())
-		return ""
+		panic(err.Error())
 	}
 	claims := aToken.Claims.(jwt.MapClaims)
 	return fmt.Sprintf("%v", claims["name"])
+}
+
+func convertBookEntitiesToDTO(books []entities.Book) []dto.BookReadDTO {
+	var booksDTO []dto.BookReadDTO
+	for i, v := range books {
+		print(i)
+		user := dto.UserReadDTO{}
+		smapping.FillStruct(&user, smapping.MapFields(&v.User))
+		book := dto.BookReadDTO{}
+		smapping.FillStruct(&book, smapping.MapFields(&v))
+		book.User = user
+		booksDTO = append(booksDTO, book)
+		fmt.Printf("%v \n", v)
+	}
+	return booksDTO
 }

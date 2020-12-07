@@ -42,10 +42,11 @@ func (controller *loginController) Login(context *gin.Context) {
 	authResult := controller.loginService.VerifyCredential(credentials.Email, credentials.Password)
 	if v, ok := authResult.(entities.User); ok {
 		generatedToken := controller.jwtService.GenerateToken(strconv.FormatUint(v.ID, 10), false)
-		userToReturn := dto.UserReadDTO{}
-		err = smapping.FillStruct(&userToReturn, smapping.MapFields(&v))
-		userToReturn.Token = generatedToken
-		response := entities.BuildResponse(true, "OK!", userToReturn)
+		v.Token = generatedToken
+		// userToReturn := dto.UserReadDTO{}
+		// err = smapping.FillStruct(&userToReturn, smapping.MapFields(&v))
+		// userToReturn.Token = generatedToken
+		response := entities.BuildResponse(true, "OK!", v)
 		context.JSON(http.StatusOK, response)
 		return
 	}
