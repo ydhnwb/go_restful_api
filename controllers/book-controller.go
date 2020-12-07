@@ -7,7 +7,6 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/mashingan/smapping"
 	"github.com/ydhnwb/go_restful_api/dto"
 	"github.com/ydhnwb/go_restful_api/entities"
 	"github.com/ydhnwb/go_restful_api/services"
@@ -38,7 +37,6 @@ func NewBookController(service services.BookService, jwtService services.JWTServ
 
 func (c *bookController) All(context *gin.Context) {
 	var books []entities.Book = c.service.All()
-	// booksDTO := convertBookEntitiesToDTO(books)
 	response := entities.BuildResponse(true, "OK", books)
 	context.JSON(http.StatusOK, response)
 }
@@ -63,47 +61,52 @@ func (c *bookController) FindByID(context *gin.Context) {
 func (c *bookController) Insert(context *gin.Context) {
 	var bookCreateDTO dto.BookCreateDTO
 	err := context.ShouldBind(&bookCreateDTO)
-	if err != nil {
-		response := entities.BuildErrorResponse("Failed to process your data", err.Error(), nil)
-		context.JSON(http.StatusBadRequest, response)
-		return
-	}
 
-	authHeader := context.GetHeader("Authorization")
-	userID := c.getUserIDByGivenToken(authHeader)
-	userIDConverted, _err := strconv.ParseUint(userID, 10, 64)
-	if _err == nil {
-		bookCreateDTO.UserID = userIDConverted
-	}
 	if err != nil {
 		response := entities.BuildErrorResponse("Failed to process your data.", err.Error(), nil)
 		context.JSON(http.StatusBadRequest, response)
 	} else {
+		authHeader := context.GetHeader("Authorization")
+		userID := c.getUserIDByGivenToken(authHeader)
+		userIDConverted, _err := strconv.ParseUint(userID, 10, 64)
+		if _err == nil {
+			bookCreateDTO.UserID = userIDConverted
+		}
 		res := c.service.Insert(bookCreateDTO)
 		response := entities.BuildResponse(true, "OK", res)
+		fmt.Printf("%v", response)
 		context.JSON(http.StatusCreated, response)
 	}
 
 }
 
 func (c *bookController) Update(context *gin.Context) {
-	var book entities.Book
-	err := context.ShouldBindJSON(&book)
+	var bookUpdateDTO dto.BookUpdateDTO
+	err := context.ShouldBind(&bookUpdateDTO)
 	if err != nil {
 		response := entities.BuildErrorResponse("Failed to process your data", err.Error(), nil)
 		context.JSON(http.StatusBadRequest, response)
 		return
 	}
-	id, err := strconv.ParseUint(context.Param("id"), 0, 0)
-	if err != nil {
-		response := entities.BuildErrorResponse("Failed to find your id", err.Error(), nil)
-		context.JSON(http.StatusBadRequest, response)
-		return
+	authHeader := context.GetHeader("Authorization")
+	token, errToken := c.jwtService.ValidateToken(authHeader)
+	if errToken != nil {
+		panic(err.Error())
 	}
-	book.ID = id
-	c.service.Update(book)
-	response := entities.BuildResponse(true, "OK", book)
-	context.JSON(http.StatusOK, response)
+	claims := token.Claims.(jwt.MapClaims)
+	userID := fmt.Sprintf("%v", claims["name"])
+	if c.service.IsAllowedToEdit(userID, bookUpdateDTO.ID) {
+		id, errID := strconv.ParseUint(fmt.Sprintf("%v", claims["name"]), 10, 64)
+		if errID == nil {
+			bookUpdateDTO.UserID = id
+		}
+		res := c.service.Update(bookUpdateDTO)
+		response := entities.BuildResponse(true, "OK", res)
+		context.JSON(http.StatusOK, response)
+	} else {
+		response := entities.BuildErrorResponse("You don't have permission", "You are not the owner of this book", entities.EmptyObj{})
+		context.JSON(http.StatusForbidden, response)
+	}
 }
 
 func (c *bookController) Delete(context *gin.Context) {
@@ -116,7 +119,7 @@ func (c *bookController) Delete(context *gin.Context) {
 	}
 	book.ID = id
 	c.service.Delete(book)
-	response := entities.BuildResponse(true, "Deleted", nil)
+	response := entities.BuildResponse(true, "Deleted", entities.EmptyObj{})
 	context.JSON(http.StatusOK, response)
 }
 
@@ -127,19 +130,4 @@ func (c *bookController) getUserIDByGivenToken(token string) string {
 	}
 	claims := aToken.Claims.(jwt.MapClaims)
 	return fmt.Sprintf("%v", claims["name"])
-}
-
-func convertBookEntitiesToDTO(books []entities.Book) []dto.BookReadDTO {
-	var booksDTO []dto.BookReadDTO
-	for i, v := range books {
-		print(i)
-		user := dto.UserReadDTO{}
-		smapping.FillStruct(&user, smapping.MapFields(&v.User))
-		book := dto.BookReadDTO{}
-		smapping.FillStruct(&book, smapping.MapFields(&v))
-		book.User = user
-		booksDTO = append(booksDTO, book)
-		fmt.Printf("%v \n", v)
-	}
-	return booksDTO
 }

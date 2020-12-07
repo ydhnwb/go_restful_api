@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/mashingan/smapping"
@@ -12,10 +13,11 @@ import (
 //BookService is an interface that contains a contract what can the service do
 type BookService interface {
 	Insert(book dto.BookCreateDTO) entities.Book
-	Update(book entities.Book) entities.Book
+	Update(book dto.BookUpdateDTO) entities.Book
 	Delete(book entities.Book)
 	All() []entities.Book
 	FindByID(bookID uint64) entities.Book
+	IsAllowedToEdit(userID string, bookID uint64) bool
 }
 
 type bookService struct {
@@ -36,12 +38,18 @@ func (service *bookService) Insert(book dto.BookCreateDTO) entities.Book {
 		log.Fatalf("failed map: %v", err)
 	}
 	res := service.bookRepository.InsertBook(b)
+	fmt.Printf("%v", res)
 	return res
 }
 
-func (service *bookService) Update(book entities.Book) entities.Book {
-	service.bookRepository.UpdateBook(book)
-	return book
+func (service *bookService) Update(book dto.BookUpdateDTO) entities.Book {
+	b := entities.Book{}
+	err := smapping.FillStruct(&b, smapping.MapFields(&book))
+	if err != nil {
+		log.Fatalf("Failed map: %v", err)
+	}
+	res := service.bookRepository.UpdateBook(b)
+	return res
 }
 
 func (service *bookService) Delete(book entities.Book) {
@@ -54,4 +62,10 @@ func (service *bookService) All() []entities.Book {
 
 func (service *bookService) FindByID(bookID uint64) entities.Book {
 	return service.bookRepository.FindBookByID(bookID)
+}
+
+func (service *bookService) IsAllowedToEdit(userID string, bookID uint64) bool {
+	b := service.bookRepository.FindBookByID(bookID)
+	id := fmt.Sprintf("%v", b.UserID)
+	return id == userID
 }

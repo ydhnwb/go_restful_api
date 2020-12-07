@@ -8,8 +8,8 @@ import (
 //BookRepository is an interface
 type BookRepository interface {
 	InsertBook(book entities.Book) entities.Book
-	UpdateBook(video entities.Book)
-	DeleteBook(video entities.Book)
+	UpdateBook(book entities.Book) entities.Book
+	DeleteBook(book entities.Book)
 	AllBook() []entities.Book
 	FindBookByID(bookID uint64) entities.Book
 }
@@ -27,11 +27,14 @@ func NewBookRepository(dbConnection *gorm.DB) BookRepository {
 
 func (db *bookConnection) InsertBook(book entities.Book) entities.Book {
 	db.connection.Save(&book)
+	db.connection.Preload("User").Find(&book)
 	return book
 }
 
-func (db *bookConnection) UpdateBook(book entities.Book) {
+func (db *bookConnection) UpdateBook(book entities.Book) entities.Book {
 	db.connection.Save(&book)
+	db.connection.Preload("User").Find(&book)
+	return book
 }
 
 func (db *bookConnection) DeleteBook(book entities.Book) {
@@ -46,6 +49,6 @@ func (db *bookConnection) AllBook() []entities.Book {
 
 func (db *bookConnection) FindBookByID(bookID uint64) entities.Book {
 	var book entities.Book
-	db.connection.Find(&book, bookID)
+	db.connection.Preload("User").Find(&book, bookID)
 	return book
 }
