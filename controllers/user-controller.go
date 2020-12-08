@@ -45,7 +45,7 @@ func (c *userController) Update(context *gin.Context) {
 		panic(err.Error())
 	}
 	claims := token.Claims.(jwt.MapClaims)
-	id, err := strconv.ParseUint(fmt.Sprintf("%v", claims["name"]), 10, 64)
+	id, err := strconv.ParseUint(fmt.Sprintf("%v", claims["user_id"]), 10, 64)
 	user.ID = id
 	c.userService.Update(user)
 	response := entities.BuildResponse(true, "OK", user)
@@ -59,7 +59,7 @@ func (c *userController) Profile(context *gin.Context) {
 		panic(err.Error())
 	}
 	claims := token.Claims.(jwt.MapClaims)
-	user := c.userService.Profile(fmt.Sprintf("%v", claims["name"]))
+	user := c.userService.Profile(fmt.Sprintf("%v", claims["user_id"]))
 	response := entities.BuildResponse(true, "OK", user)
 	context.JSON(http.StatusOK, response)
 }

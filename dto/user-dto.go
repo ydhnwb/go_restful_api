@@ -14,11 +14,3 @@ type UserCreateDTO struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
-
-//UserReadDTO is a model for general read of user table
-type UserReadDTO struct {
-	ID       uint64 `json:"id,omitempty"`
-	Fullname string `json:"fullname"`
-	Email    string `json:"email"`
-	Token    string `json:"token,omitempty"`
-}

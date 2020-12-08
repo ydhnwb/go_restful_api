@@ -94,9 +94,9 @@ func (c *bookController) Update(context *gin.Context) {
 		panic(err.Error())
 	}
 	claims := token.Claims.(jwt.MapClaims)
-	userID := fmt.Sprintf("%v", claims["name"])
+	userID := fmt.Sprintf("%v", claims["user_id"])
 	if c.service.IsAllowedToEdit(userID, bookUpdateDTO.ID) {
-		id, errID := strconv.ParseUint(fmt.Sprintf("%v", claims["name"]), 10, 64)
+		id, errID := strconv.ParseUint(fmt.Sprintf("%v", claims["user_id"]), 10, 64)
 		if errID == nil {
 			bookUpdateDTO.UserID = id
 		}
@@ -129,5 +129,5 @@ func (c *bookController) getUserIDByGivenToken(token string) string {
 		panic(err.Error())
 	}
 	claims := aToken.Claims.(jwt.MapClaims)
-	return fmt.Sprintf("%v", claims["name"])
+	return fmt.Sprintf("%v", claims["user_id"])
 }

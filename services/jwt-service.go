@@ -10,14 +10,13 @@ import (
 
 //JWTService is a contract of what jwtService can do
 type JWTService interface {
-	GenerateToken(name string, admin bool) string
+	GenerateToken(userID string) string
 	ValidateToken(token string) (*jwt.Token, error)
 }
 
 //Extending the jwt.standarClaim, use this for learning purpose
 type jwtCustomClaim struct {
-	Name  string `json:"name"`
-	Admin bool   `json:"is_admin"`
+	UserID string `json:"user_id"`
 	jwt.StandardClaims
 }
 
@@ -35,19 +34,18 @@ func NewJWTService() JWTService {
 }
 
 func getSecretKey() string {
-	secretKey := os.Getenv("secretKey")
+	secretKey := os.Getenv("JWT_SECRETKEY")
 	if secretKey == "" {
 		secretKey = "exampleOfMySecretKey"
 	}
 	return secretKey
 }
 
-func (jwtService *jwtService) GenerateToken(email string, admin bool) string {
+func (jwtService *jwtService) GenerateToken(userID string) string {
 	claims := &jwtCustomClaim{
-		email,
-		admin,
+		userID,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+			ExpiresAt: time.Now().AddDate(1, 0, 0).Unix(),
 			Issuer:    jwtService.issuer,
 			IssuedAt:  time.Now().Unix(),
 		},
