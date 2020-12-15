@@ -49,7 +49,7 @@ func (c *bookController) FindByID(context *gin.Context) {
 		return
 	}
 	var book entities.Book = c.service.FindByID(id)
-	if (entities.Book{}) == book {
+	if book.ID == 0 {
 		response := entities.BuildErrorResponse("Id not found", "No data with gived id", entities.EmptyObj{})
 		context.JSON(http.StatusNotFound, response)
 	} else {
